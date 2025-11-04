@@ -18,6 +18,7 @@ Algorithm_and_Datastructures/
 │
 ├── datastructures/          # Data structure definitions
 │   ├── tree.ts              # Tree data structure
+│   ├── graph.ts             # Graph data structures
 │   ├── index.ts             # Main exports
 │   └── README.md
 │
@@ -38,6 +39,7 @@ Algorithm_and_Datastructures/
 
 - **`/datastructures/`** - Contains all data structure definitions
   - Tree structures
+  - Graph structures (adjacency list and matrix representations)
   - Interfaces and types
 
 This separation follows best practices:
@@ -68,15 +70,29 @@ import {
 } from './algorithms';
 
 // Import data structures
-import { TreeNode, Tree } from './datastructures';
+import { TreeNode, Tree, AdjacencyListGraph, AdjacencyMatrixGraph } from './datastructures';
 
-// Use them together
+// Use trees
 const leaf: TreeNode = { children: [], color: 1 };
 const tree: Tree = { root: leaf };
 const modes = subtreeMode(tree.root);
+
+// Use graphs
+const graph = new AdjacencyListGraph<string>(false, false);
+graph.addVertex('A');
+graph.addVertex('B');
+graph.addEdge('A', 'B');
 ```
 
 ## Features
+
+### Data Structures
+- **Tree structures** with colored leaf nodes
+- **Graph structures** with multiple representations:
+  - Adjacency list (efficient for sparse graphs)
+  - Adjacency matrix (efficient for dense graphs)
+  - Support for directed/undirected graphs
+  - Support for weighted/unweighted edges
 
 ### Approximation Algorithms
 - Multiplicative approximation checking

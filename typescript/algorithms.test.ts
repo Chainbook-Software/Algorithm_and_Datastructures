@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 
-import { range, isMultiplicativeApproximation, isMultiplicativeApproximationTwoSided, calculateDensity, calculateFlipNumber, calculateFrequencyVector, StreamUpdate, TreeNode, subtreeMode } from './index';
+import { range, isMultiplicativeApproximation, isMultiplicativeApproximationTwoSided, calculateDensity, calculateFlipNumber, calculateFrequencyVector, StreamUpdate, TreeNode, subtreeMode, AdjacencyListGraph, AdjacencyMatrixGraph } from './index';
 
 describe('range', () => {
   test('returns array from 1 to k for positive k', () => {
@@ -128,5 +128,161 @@ describe('subtreeMode', () => {
     expect(result.get(internal1)).toBe(1); // modes: 1 and 2, 1 appears once, but since equal, takes the first max
     expect(result.get(internal2)).toBe(2); // 2 and 3, 2 appears once
     expect(result.get(root)).toBe(1); // 1 and 2, 1 appears once
+  });
+});
+
+describe('AdjacencyListGraph', () => {
+  describe('undirected unweighted graph', () => {
+    let graph: AdjacencyListGraph<string>;
+
+    beforeEach(() => {
+      graph = new AdjacencyListGraph<string>(false, false);
+    });
+
+    test('starts empty', () => {
+      expect(graph.getVertexCount()).toBe(0);
+      expect(graph.getEdgeCount()).toBe(0);
+      expect(graph.vertices).toEqual([]);
+      expect(graph.edges).toEqual([]);
+    });
+
+    test('adds vertices', () => {
+      graph.addVertex('A');
+      graph.addVertex('B');
+      expect(graph.getVertexCount()).toBe(2);
+      expect(graph.vertices).toEqual(['A', 'B']);
+      expect(graph.hasVertex('A')).toBe(true);
+      expect(graph.hasVertex('C')).toBe(false);
+    });
+
+    test('adds edges', () => {
+      graph.addVertex('A');
+      graph.addVertex('B');
+      graph.addEdge('A', 'B');
+      expect(graph.getEdgeCount()).toBe(1);
+      expect(graph.hasEdge('A', 'B')).toBe(true);
+      expect(graph.hasEdge('B', 'A')).toBe(true); // undirected
+      expect(graph.getNeighbors('A')).toEqual(['B']);
+      expect(graph.getNeighbors('B')).toEqual(['A']);
+    });
+
+    test('removes edges', () => {
+      graph.addEdge('A', 'B');
+      expect(graph.hasEdge('A', 'B')).toBe(true);
+      graph.removeEdge('A', 'B');
+      expect(graph.hasEdge('A', 'B')).toBe(false);
+      expect(graph.hasEdge('B', 'A')).toBe(false); // undirected
+    });
+
+    test('calculates degrees correctly', () => {
+      graph.addEdge('A', 'B');
+      graph.addEdge('A', 'C');
+      expect(graph.getDegree('A')).toBe(2);
+      expect(graph.getDegree('B')).toBe(1);
+      expect(graph.getDegree('C')).toBe(1);
+    });
+
+    test('removes vertices', () => {
+      graph.addEdge('A', 'B');
+      graph.addEdge('A', 'C');
+      graph.removeVertex('A');
+      expect(graph.hasVertex('A')).toBe(false);
+      expect(graph.getVertexCount()).toBe(2);
+      expect(graph.hasEdge('B', 'C')).toBe(false);
+    });
+  });
+
+  describe('directed weighted graph', () => {
+    let graph: AdjacencyListGraph<string>;
+
+    beforeEach(() => {
+      graph = new AdjacencyListGraph<string>(true, true);
+    });
+
+    test('handles directed edges', () => {
+      graph.addEdge('A', 'B', 5);
+      expect(graph.hasEdge('A', 'B')).toBe(true);
+      expect(graph.hasEdge('B', 'A')).toBe(false); // directed
+      expect(graph.getEdgeWeight('A', 'B')).toBe(5);
+      expect(graph.getEdgeWeight('B', 'A')).toBeUndefined();
+    });
+
+    test('calculates in/out degrees', () => {
+      graph.addEdge('A', 'B', 1);
+      graph.addEdge('B', 'A', 2);
+      graph.addEdge('A', 'C', 3);
+      expect(graph.getOutDegree('A')).toBe(2);
+      expect(graph.getInDegree('A')).toBe(1);
+      expect(graph.getOutDegree('B')).toBe(1);
+      expect(graph.getInDegree('B')).toBe(1);
+      expect(graph.getOutDegree('C')).toBe(0);
+      expect(graph.getInDegree('C')).toBe(1);
+    });
+  });
+});
+
+describe('AdjacencyMatrixGraph', () => {
+  describe('undirected unweighted graph', () => {
+    let graph: AdjacencyMatrixGraph;
+
+    beforeEach(() => {
+      graph = new AdjacencyMatrixGraph(false, false);
+    });
+
+    test('starts empty', () => {
+      expect(graph.getVertexCount()).toBe(0);
+      expect(graph.getEdgeCount()).toBe(0);
+    });
+
+    test('adds vertices', () => {
+      graph.addVertex(1);
+      graph.addVertex(2);
+      expect(graph.getVertexCount()).toBe(2);
+      expect(graph.vertices).toEqual([1, 2]);
+    });
+
+    test('adds edges', () => {
+      graph.addVertex(1);
+      graph.addVertex(2);
+      graph.addEdge(1, 2);
+      expect(graph.getEdgeCount()).toBe(1);
+      expect(graph.hasEdge(1, 2)).toBe(true);
+      expect(graph.hasEdge(2, 1)).toBe(true); // undirected
+      expect(graph.getNeighbors(1)).toEqual([2]);
+      expect(graph.getNeighbors(2)).toEqual([1]);
+    });
+
+    test('handles weighted edges', () => {
+      const weightedGraph = new AdjacencyMatrixGraph(false, true);
+      weightedGraph.addEdge(1, 2, 3.5);
+      expect(weightedGraph.getEdgeWeight(1, 2)).toBe(3.5);
+      expect(weightedGraph.getEdgeWeight(2, 1)).toBe(3.5); // undirected
+    });
+  });
+
+  describe('directed graph', () => {
+    let graph: AdjacencyMatrixGraph;
+
+    beforeEach(() => {
+      graph = new AdjacencyMatrixGraph(true, false);
+    });
+
+    test('handles directed edges', () => {
+      graph.addEdge(1, 2);
+      expect(graph.hasEdge(1, 2)).toBe(true);
+      expect(graph.hasEdge(2, 1)).toBe(false); // directed
+    });
+
+    test('calculates degrees correctly', () => {
+      graph.addEdge(1, 2);
+      graph.addEdge(2, 1);
+      graph.addEdge(1, 3);
+      expect(graph.getOutDegree(1)).toBe(2);
+      expect(graph.getInDegree(1)).toBe(1);
+      expect(graph.getOutDegree(2)).toBe(1);
+      expect(graph.getInDegree(2)).toBe(1);
+      expect(graph.getOutDegree(3)).toBe(0);
+      expect(graph.getInDegree(3)).toBe(1);
+    });
   });
 });
