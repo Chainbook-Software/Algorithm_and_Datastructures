@@ -5,7 +5,7 @@
  * We estimate user preferences, verify approximation accuracy, and measure data sparsity.
  */
 
-import * as Alg from './index';
+import * as Alg from '../index';
 
 // Define a preference function: f(v) = sum of ratings (0 if no ratings, else max(1, sum))
 const userPreferenceFunction = (ratings: number[]): number => {

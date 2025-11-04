@@ -1,10 +1,11 @@
 {
-  "name": "typescript",
+  "name": "algorithms-and-datastructures",
   "version": "1.0.0",
-  "description": "",
+  "description": "TypeScript library of algorithms and data structures",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest typescript/algorithms.test.ts",
+    "test:watch": "jest --watch",
     "build": "tsc"
   },
   "keywords": [],

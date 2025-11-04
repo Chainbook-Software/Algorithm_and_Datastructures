@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 
-import { range, isMultiplicativeApproximation, isMultiplicativeApproximationTwoSided, calculateDensity, calculateFlipNumber, calculateFrequencyVector, StreamUpdate } from './index';
+import { range, isMultiplicativeApproximation, isMultiplicativeApproximationTwoSided, calculateDensity, calculateFlipNumber, calculateFrequencyVector, StreamUpdate, TreeNode, subtreeMode } from './index';
 
 describe('range', () => {
   test('returns array from 1 to k for positive k', () => {
@@ -90,5 +90,43 @@ describe('calculateFrequencyVector', () => {
 
   test('throws error for invalid n', () => {
     expect(() => calculateFrequencyVector(0, [], 0)).toThrow("n must be a positive integer.");
+  });
+});
+
+describe('subtreeMode', () => {
+  test('computes mode for a single leaf node', () => {
+    const leaf: TreeNode = { children: [], color: 5 };
+    const result = subtreeMode(leaf);
+    expect(result.get(leaf)).toBe(5);
+  });
+
+  test('computes mode for a tree with multiple leaves', () => {
+    const leaf1: TreeNode = { children: [], color: 1 };
+    const leaf2: TreeNode = { children: [], color: 2 };
+    const leaf3: TreeNode = { children: [], color: 1 };
+    const root: TreeNode = { children: [leaf1, leaf2, leaf3] };
+    const result = subtreeMode(root);
+    expect(result.get(leaf1)).toBe(1);
+    expect(result.get(leaf2)).toBe(2);
+    expect(result.get(leaf3)).toBe(1);
+    expect(result.get(root)).toBe(1); // 1 appears twice, 2 once
+  });
+
+  test('computes mode for a more complex tree', () => {
+    const leaf1: TreeNode = { children: [], color: 1 };
+    const leaf2: TreeNode = { children: [], color: 2 };
+    const leaf3: TreeNode = { children: [], color: 2 };
+    const leaf4: TreeNode = { children: [], color: 3 };
+    const internal1: TreeNode = { children: [leaf1, leaf2] };
+    const internal2: TreeNode = { children: [leaf3, leaf4] };
+    const root: TreeNode = { children: [internal1, internal2] };
+    const result = subtreeMode(root);
+    expect(result.get(leaf1)).toBe(1);
+    expect(result.get(leaf2)).toBe(2);
+    expect(result.get(leaf3)).toBe(2);
+    expect(result.get(leaf4)).toBe(3);
+    expect(result.get(internal1)).toBe(1); // modes: 1 and 2, 1 appears once, but since equal, takes the first max
+    expect(result.get(internal2)).toBe(2); // 2 and 3, 2 appears once
+    expect(result.get(root)).toBe(1); // 1 and 2, 1 appears once
   });
 });

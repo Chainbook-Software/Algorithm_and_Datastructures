@@ -1,8 +1,0 @@
-{
-  "typescript.preferences.includePackageJsonAutoImports": "auto",
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "typescript.tsc.autoDetect": "off",
-  "typescript.preferences.tsconfig": {
-    "**/*.test.ts": "tsconfig.test.json"
-  }
-}
