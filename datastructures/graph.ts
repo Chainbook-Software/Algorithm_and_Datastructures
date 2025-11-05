@@ -600,3 +600,246 @@ export class AdjacencyMatrixGraph implements Graph<number> {
     return cloned;
   }
 }
+
+/**
+ * Represents a complete signed graph where edges are either positive (+1) or negative (-1).
+ * This is a specialized graph implementation for signed graph theory applications.
+ */
+export class SignedGraph implements Graph<number> {
+  public readonly isDirected: boolean = false; // Signed graphs are typically undirected
+  public readonly isWeighted: boolean = true; // Uses +1/-1 weights for signed edges
+  private _vertexCount: number;
+  private adjMatrix: (1 | -1 | 0)[][]; // 1 for positive edge, -1 for negative edge, 0 for no edge
+
+  /**
+   * Constructs a complete signed graph with the given number of vertices.
+   * @param vertices The number of vertices in the graph.
+   * @param randomizeEdges If true, randomly assigns positive/negative edges. If false, initializes with positive edges.
+   */
+  constructor(vertices: number, randomizeEdges: boolean = true) {
+    this._vertexCount = vertices;
+    this.adjMatrix = Array(vertices)
+      .fill(null)
+      .map(() => Array(vertices).fill(0));
+
+    // Create a complete graph with positive and negative edges
+    for (let i = 0; i < vertices; i++) {
+      for (let j = i + 1; j < vertices; j++) {
+        // Assign either 1 or -1
+        const sign = randomizeEdges ? (Math.random() < 0.5 ? 1 : -1) : 1;
+        this.adjMatrix[i][j] = sign;
+        this.adjMatrix[j][i] = sign; // Ensure symmetry for undirected graph
+      }
+    }
+  }
+
+  get vertices(): number[] {
+    return Array.from({ length: this._vertexCount }, (_, i) => i);
+  }
+
+  get edges(): GraphEdge<number>[] {
+    const edges: GraphEdge<number>[] = [];
+    for (let i = 0; i < this._vertexCount; i++) {
+      for (let j = i + 1; j < this._vertexCount; j++) {
+        const weight = this.adjMatrix[i][j];
+        if (weight !== 0) {
+          edges.push({ from: i, to: j, weight });
+        }
+      }
+    }
+    return edges;
+  }
+
+  /**
+   * Checks if the graph is complete (every pair of vertices has an edge).
+   * @returns True if the graph is complete, false otherwise.
+   */
+  isComplete(): boolean {
+    for (let i = 0; i < this._vertexCount; i++) {
+      for (let j = i + 1; j < this._vertexCount; j++) {
+        if (this.adjMatrix[i][j] === 0) {
+          return false; // If any edge is missing, the graph is not complete
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Gets the sign of an edge between two vertices.
+   * @param from Source vertex
+   * @param to Target vertex
+   * @returns 1 for positive edge, -1 for negative edge, 0 for no edge
+   */
+  getEdgeSign(from: number, to: number): 1 | -1 | 0 {
+    if (from < 0 || from >= this._vertexCount || to < 0 || to >= this._vertexCount) {
+      return 0;
+    }
+    return this.adjMatrix[from][to];
+  }
+
+  /**
+   * Flips the sign of an edge between two vertices.
+   * @param from Source vertex
+   * @param to Target vertex
+   */
+  flipEdgeSign(from: number, to: number): void {
+    if (from < 0 || from >= this._vertexCount || to < 0 || to >= this._vertexCount) {
+      throw new Error("Invalid vertex indices");
+    }
+    if (from === to) {
+      throw new Error("Cannot flip self-loop");
+    }
+
+    const currentSign = this.getEdgeSign(from, to);
+    if (currentSign === 0) {
+      throw new Error("Cannot flip non-existent edge");
+    }
+
+    const newSign = currentSign === 1 ? -1 : 1;
+    this.adjMatrix[from][to] = newSign;
+    this.adjMatrix[to][from] = newSign; // Maintain symmetry
+  }
+
+  /**
+   * Counts the number of positive edges in the graph.
+   * @returns Number of positive edges
+   */
+  countPositiveEdges(): number {
+    let count = 0;
+    for (let i = 0; i < this._vertexCount; i++) {
+      for (let j = i + 1; j < this._vertexCount; j++) {
+        if (this.adjMatrix[i][j] === 1) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  /**
+   * Counts the number of negative edges in the graph.
+   * @returns Number of negative edges
+   */
+  countNegativeEdges(): number {
+    let count = 0;
+    for (let i = 0; i < this._vertexCount; i++) {
+      for (let j = i + 1; j < this._vertexCount; j++) {
+        if (this.adjMatrix[i][j] === -1) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  /**
+   * Prints the adjacency matrix of the graph.
+   */
+  printGraph(): void {
+    console.log("Signed Graph Adjacency Matrix:");
+    for (let i = 0; i < this._vertexCount; i++) {
+      console.log(this.adjMatrix[i].map(val => val.toString().padStart(2)).join(" "));
+    }
+  }
+
+  // Graph interface implementation
+
+  addVertex(vertex: number): void {
+    throw new Error("SignedGraph is always complete - cannot add individual vertices");
+  }
+
+  removeVertex(vertex: number): void {
+    throw new Error("SignedGraph is always complete - cannot remove individual vertices");
+  }
+
+  addEdge(from: number, to: number, weight?: number): void {
+    if (weight !== 1 && weight !== -1) {
+      throw new Error("SignedGraph edges must have weight 1 (positive) or -1 (negative)");
+    }
+    if (from === to) {
+      throw new Error("Self-loops are not allowed in signed graphs");
+    }
+    if (from < 0 || from >= this._vertexCount || to < 0 || to >= this._vertexCount) {
+      throw new Error("Invalid vertex indices");
+    }
+
+    const sign = weight || 1;
+    this.adjMatrix[from][to] = sign;
+    this.adjMatrix[to][from] = sign;
+  }
+
+  removeEdge(from: number, to: number): void {
+    throw new Error("SignedGraph is always complete - cannot remove edges");
+  }
+
+  hasEdge(from: number, to: number): boolean {
+    if (from < 0 || from >= this._vertexCount || to < 0 || to >= this._vertexCount) {
+      return false;
+    }
+    return this.adjMatrix[from][to] !== 0;
+  }
+
+  getEdgeWeight(from: number, to: number): number | undefined {
+    const sign = this.getEdgeSign(from, to);
+    return sign === 0 ? undefined : sign;
+  }
+
+  getNeighbors(vertex: number): number[] {
+    if (vertex < 0 || vertex >= this._vertexCount) {
+      return [];
+    }
+    const neighbors: number[] = [];
+    for (let i = 0; i < this._vertexCount; i++) {
+      if (i !== vertex && this.adjMatrix[vertex][i] !== 0) {
+        neighbors.push(i);
+      }
+    }
+    return neighbors;
+  }
+
+  getDegree(vertex: number): number {
+    return this.getNeighbors(vertex).length;
+  }
+
+  getInDegree(vertex: number): number {
+    // For undirected graphs, in-degree equals degree
+    return this.getDegree(vertex);
+  }
+
+  getOutDegree(vertex: number): number {
+    // For undirected graphs, out-degree equals degree
+    return this.getDegree(vertex);
+  }
+
+  hasVertex(vertex: number): boolean {
+    return vertex >= 0 && vertex < this._vertexCount;
+  }
+
+  getVertexCount(): number {
+    return this._vertexCount;
+  }
+
+  getEdgeCount(): number {
+    return (this._vertexCount * (this._vertexCount - 1)) / 2; // Always complete
+  }
+
+  clear(): void {
+    throw new Error("SignedGraph is always complete - cannot clear");
+  }
+
+  clone(): Graph<number> {
+    const cloned = new SignedGraph(this._vertexCount, false); // Start with positive edges
+
+    // Copy the exact edge signs
+    for (let i = 0; i < this._vertexCount; i++) {
+      for (let j = i + 1; j < this._vertexCount; j++) {
+        const sign = this.adjMatrix[i][j];
+        cloned.adjMatrix[i][j] = sign;
+        cloned.adjMatrix[j][i] = sign;
+      }
+    }
+
+    return cloned;
+  }
+}

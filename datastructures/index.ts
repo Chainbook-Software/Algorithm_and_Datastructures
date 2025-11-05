@@ -10,5 +10,6 @@ export {
   AdjacencyList,
   AdjacencyMatrix,
   AdjacencyListGraph,
-  AdjacencyMatrixGraph
+  AdjacencyMatrixGraph,
+  SignedGraph
 } from './graph';

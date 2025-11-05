@@ -66,11 +66,12 @@ import {
   subtreeMode, 
   isMultiplicativeApproximation, 
   calculateDensity,
-  obliviousStreamingAlgorithm 
+  obliviousStreamingAlgorithm,
+  CorrelationClustering
 } from './algorithms';
 
 // Import data structures
-import { TreeNode, Tree, AdjacencyListGraph, AdjacencyMatrixGraph } from './datastructures';
+import { TreeNode, Tree, AdjacencyListGraph, AdjacencyMatrixGraph, SignedGraph } from './datastructures';
 
 // Use trees
 const leaf: TreeNode = { children: [], color: 1 };
@@ -82,6 +83,21 @@ const graph = new AdjacencyListGraph<string>(false, false);
 graph.addVertex('A');
 graph.addVertex('B');
 graph.addEdge('A', 'B');
+
+// Use signed graphs
+const signedGraph = new SignedGraph(4, true); // 4 vertices with random edge signs
+signedGraph.flipEdgeSign(0, 1); // Flip edge from positive to negative
+console.log("Positive edges:", signedGraph.countPositiveEdges());
+console.log("Negative edges:", signedGraph.countNegativeEdges());
+
+// Use correlation clustering
+const vertices = [1, 2, 3, 4, 5];
+const positiveEdges = [[1, 2], [2, 3], [4, 5]]; // Similar items
+const negativeEdges = [[1, 4], [3, 5]]; // Dissimilar items
+
+const cc = new CorrelationClustering(vertices, positiveEdges, negativeEdges);
+const result = cc.greedyCorrelationClustering();
+console.log(`Found ${result.clusterCount} clusters with ${result.mistakes} mistakes`);
 ```
 
 ## Features
@@ -91,6 +107,7 @@ graph.addEdge('A', 'B');
 - **Graph structures** with multiple representations:
   - Adjacency list (efficient for sparse graphs)
   - Adjacency matrix (efficient for dense graphs)
+  - **Signed graphs** (complete graphs with positive/negative edges)
   - Support for directed/undirected graphs
   - Support for weighted/unweighted edges
 
@@ -107,6 +124,11 @@ graph.addEdge('A', 'B');
 ### Tree Algorithms
 - Subtree mode computation with memoization
 - Works with colored leaf nodes
+
+### Clustering Algorithms
+- **Correlation clustering** for signed graphs
+- Greedy algorithms to minimize clustering disagreements
+- Mistake counting and cluster validation
 
 ### Utilities
 - Range generation

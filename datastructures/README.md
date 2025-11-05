@@ -16,6 +16,7 @@ This directory contains data structure definitions.
   - `AdjacencyMatrix` type - 2D array adjacency matrix representation
   - `AdjacencyListGraph<T>` class - Adjacency list implementation
   - `AdjacencyMatrixGraph` class - Adjacency matrix implementation (for numeric vertices)
+  - `SignedGraph` class - Complete signed graph with positive/negative edges
 
 ## Usage
 

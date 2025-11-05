@@ -23,6 +23,12 @@ This directory contains algorithm implementations.
   - `range` - Generates integer range [1, k]
   - `calculateDensity` - Calculates vector sparsity (0-norm)
 
+### Clustering Algorithms
+- `clustering.ts` - Correlation clustering for signed graphs
+  - `CorrelationClustering` - Main class for correlation clustering
+  - `Clustering` - Interface for clustering results
+  - Greedy algorithms to minimize clustering disagreements
+
 ### Examples
 - `examples/recommendationExample.ts` - E-commerce recommendation system example
 

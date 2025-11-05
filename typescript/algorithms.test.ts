@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 
-import { range, isMultiplicativeApproximation, isMultiplicativeApproximationTwoSided, calculateDensity, calculateFlipNumber, calculateFrequencyVector, StreamUpdate, TreeNode, subtreeMode, AdjacencyListGraph, AdjacencyMatrixGraph } from './index';
+import { range, isMultiplicativeApproximation, isMultiplicativeApproximationTwoSided, calculateDensity, calculateFlipNumber, calculateFrequencyVector, StreamUpdate, TreeNode, subtreeMode, AdjacencyListGraph, AdjacencyMatrixGraph, SignedGraph, CorrelationClustering, Clustering } from './index';
 
 describe('range', () => {
   test('returns array from 1 to k for positive k', () => {
@@ -283,6 +283,228 @@ describe('AdjacencyMatrixGraph', () => {
       expect(graph.getInDegree(2)).toBe(1);
       expect(graph.getOutDegree(3)).toBe(0);
       expect(graph.getInDegree(3)).toBe(1);
+    });
+  });
+});
+
+describe('SignedGraph', () => {
+  describe('complete signed graph', () => {
+    let graph: SignedGraph;
+
+    beforeEach(() => {
+      graph = new SignedGraph(4, false); // 4 vertices, all positive edges initially
+    });
+
+    test('creates complete graph with correct properties', () => {
+      expect(graph.isComplete()).toBe(true);
+      expect(graph.getVertexCount()).toBe(4);
+      expect(graph.getEdgeCount()).toBe(6); // C(4,2) = 6 edges
+      expect(graph.isDirected).toBe(false);
+      expect(graph.isWeighted).toBe(true);
+    });
+
+    test('starts with positive edges when randomizeEdges is false', () => {
+      expect(graph.countPositiveEdges()).toBe(6);
+      expect(graph.countNegativeEdges()).toBe(0);
+      expect(graph.getEdgeSign(0, 1)).toBe(1);
+      expect(graph.getEdgeSign(1, 2)).toBe(1);
+    });
+
+    test('can randomize edge signs', () => {
+      const randomGraph = new SignedGraph(4, true);
+      // With randomization, we should have some mix of positive and negative edges
+      const totalEdges = randomGraph.countPositiveEdges() + randomGraph.countNegativeEdges();
+      expect(totalEdges).toBe(6);
+    });
+
+    test('can flip edge signs', () => {
+      expect(graph.getEdgeSign(0, 1)).toBe(1);
+      graph.flipEdgeSign(0, 1);
+      expect(graph.getEdgeSign(0, 1)).toBe(-1);
+      expect(graph.getEdgeSign(1, 0)).toBe(-1); // Should be symmetric
+    });
+
+    test('throws error when flipping non-existent edge', () => {
+      const smallGraph = new SignedGraph(2, false);
+      expect(() => smallGraph.flipEdgeSign(0, 2)).toThrow("Invalid vertex indices");
+    });
+
+    test('throws error when flipping self-loop', () => {
+      expect(() => graph.flipEdgeSign(0, 0)).toThrow("Cannot flip self-loop");
+    });
+
+    test('correctly counts positive and negative edges', () => {
+      graph.flipEdgeSign(0, 1);
+      graph.flipEdgeSign(0, 2);
+      expect(graph.countPositiveEdges()).toBe(4);
+      expect(graph.countNegativeEdges()).toBe(2);
+    });
+
+    test('implements Graph interface correctly', () => {
+      expect(graph.hasVertex(0)).toBe(true);
+      expect(graph.hasVertex(4)).toBe(false);
+      expect(graph.hasEdge(0, 1)).toBe(true);
+      expect(graph.getEdgeWeight(0, 1)).toBe(1);
+      expect(graph.getNeighbors(0)).toEqual([1, 2, 3]);
+      expect(graph.getDegree(0)).toBe(3);
+    });
+
+    test('prevents adding/removing vertices', () => {
+      expect(() => graph.addVertex(4)).toThrow("SignedGraph is always complete");
+      expect(() => graph.removeVertex(0)).toThrow("SignedGraph is always complete");
+    });
+
+    test('prevents adding/removing edges', () => {
+      expect(() => graph.removeEdge(0, 1)).toThrow("SignedGraph is always complete");
+    });
+
+    test('validates edge weights', () => {
+      expect(() => graph.addEdge(0, 1, 2)).toThrow("SignedGraph edges must have weight 1 (positive) or -1 (negative)");
+    });
+
+    test('prevents self-loops', () => {
+      expect(() => graph.addEdge(0, 0, 1)).toThrow("Self-loops are not allowed in signed graphs");
+    });
+
+    test('can clone the graph', () => {
+      graph.flipEdgeSign(0, 1);
+      const cloned = graph.clone() as SignedGraph;
+      expect(cloned.getEdgeSign(0, 1)).toBe(-1);
+      expect(cloned.getVertexCount()).toBe(4);
+      expect(cloned.isComplete()).toBe(true);
+    });
+  });
+});
+
+describe('CorrelationClustering', () => {
+  describe('basic functionality', () => {
+    let clustering: CorrelationClustering;
+
+    beforeEach(() => {
+      // Create a simple graph: 1-2-3 with positive edges, 1-4 and 3-5 with negative edges
+      const vertices = [1, 2, 3, 4, 5];
+      const positiveEdges: [number, number][] = [[1, 2], [2, 3], [4, 5]];
+      const negativeEdges: [number, number][] = [[1, 4], [3, 5]];
+      clustering = new CorrelationClustering(vertices, positiveEdges, negativeEdges);
+    });
+
+    test('calculates mistakes correctly', () => {
+      // Perfect clustering: {1,2,3} and {4,5}
+      const perfectClustering = new Map([
+        [1, 1], [2, 1], [3, 1], [4, 2], [5, 2]
+      ]);
+      expect(clustering.calculateMistakes(perfectClustering)).toBe(0);
+
+      // Bad clustering: all in one cluster
+      const badClustering = new Map([
+        [1, 1], [2, 1], [3, 1], [4, 1], [5, 1]
+      ]);
+      expect(clustering.calculateMistakes(badClustering)).toBe(2); // 2 negative edges within cluster
+    });
+
+    test('validates clustering', () => {
+      const validClustering = new Map([
+        [1, 1], [2, 1], [3, 1], [4, 2], [5, 2]
+      ]);
+      expect(clustering.validateClustering(validClustering)).toBe(true);
+
+      const invalidClustering = new Map([
+        [1, 1], [2, 1], [3, 1], [4, 2] // Missing vertex 5
+      ]);
+      expect(clustering.validateClustering(invalidClustering)).toBe(false);
+    });
+
+    test('gets graph statistics', () => {
+      const stats = clustering.getGraphStats();
+      expect(stats.vertexCount).toBe(5);
+      expect(stats.positiveEdgeCount).toBe(3);
+      expect(stats.negativeEdgeCount).toBe(2);
+      expect(stats.totalEdgeCount).toBe(5);
+    });
+
+    test('converts clustering to arrays', () => {
+      const testClustering = new Map([
+        [1, 1], [2, 1], [3, 1], [4, 2], [5, 2]
+      ]);
+      const clusters = clustering.getClustersAsArrays(testClustering);
+
+      expect(clusters.get(1)).toEqual([1, 2, 3]);
+      expect(clusters.get(2)).toEqual([4, 5]);
+    });
+  });
+
+  describe('greedy correlation clustering', () => {
+    test('finds optimal clustering for simple case', () => {
+      const vertices = [1, 2, 3, 4];
+      const positiveEdges: [number, number][] = [[1, 2], [3, 4]];
+      const negativeEdges: [number, number][] = [[1, 3], [2, 4]];
+
+      const cc = new CorrelationClustering(vertices, positiveEdges, negativeEdges);
+      const result = cc.greedyCorrelationClustering();
+
+      // Should find clustering with 0 mistakes: {1,2} and {3,4}
+      expect(result.mistakes).toBe(0);
+      expect(result.clusterCount).toBe(2);
+
+      // Verify the clustering
+      const clusters = cc.getClustersAsArrays(result.clustering);
+      const clusterArrays = Array.from(clusters.values()).sort((a, b) => a.length - b.length);
+
+      expect(clusterArrays.length).toBe(2);
+      expect(clusterArrays[0].sort()).toEqual([1, 2]);
+      expect(clusterArrays[1].sort()).toEqual([3, 4]);
+    });
+
+    test('handles empty graph', () => {
+      const vertices = [1, 2, 3];
+      const positiveEdges: [number, number][] = [];
+      const negativeEdges: [number, number][] = [];
+
+      const cc = new CorrelationClustering(vertices, positiveEdges, negativeEdges);
+      const result = cc.greedyCorrelationClustering();
+
+      expect(result.mistakes).toBe(0);
+      expect(result.clusterCount).toBe(3); // Each vertex in its own cluster
+    });
+
+    test('handles complete positive graph', () => {
+      const vertices = [1, 2, 3];
+      const positiveEdges: [number, number][] = [[1, 2], [1, 3], [2, 3]];
+      const negativeEdges: [number, number][] = [];
+
+      const cc = new CorrelationClustering(vertices, positiveEdges, negativeEdges);
+      const result = cc.greedyCorrelationClustering();
+
+      expect(result.mistakes).toBe(0);
+      expect(result.clusterCount).toBe(1); // All in one cluster
+    });
+
+    test('handles complete negative graph', () => {
+      const vertices = [1, 2, 3];
+      const positiveEdges: [number, number][] = [];
+      const negativeEdges: [number, number][] = [[1, 2], [1, 3], [2, 3]];
+
+      const cc = new CorrelationClustering(vertices, positiveEdges, negativeEdges);
+      const result = cc.greedyCorrelationClustering();
+
+      expect(result.mistakes).toBe(0);
+      expect(result.clusterCount).toBe(3); // Each in separate cluster
+    });
+  });
+
+  describe('simple greedy clustering', () => {
+    test('produces valid clustering', () => {
+      const vertices = [1, 2, 3, 4, 5];
+      const positiveEdges: [number, number][] = [[1, 2], [2, 3], [4, 5]];
+      const negativeEdges: [number, number][] = [[1, 4], [3, 5]];
+
+      const cc = new CorrelationClustering(vertices, positiveEdges, negativeEdges);
+      const result = cc.simpleGreedyClustering();
+
+      expect(result.mistakes).toBeGreaterThanOrEqual(0);
+      expect(result.clusterCount).toBeGreaterThanOrEqual(1);
+      expect(result.clusterCount).toBeLessThanOrEqual(vertices.length);
+      expect(cc.validateClustering(result.clustering)).toBe(true);
     });
   });
 });
