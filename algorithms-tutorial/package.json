@@ -1,0 +1,37 @@
+{
+  "name": "algorithms-tutorial",
+  "version": "1.0.0",
+  "description": "Comprehensive tutorial for learning algorithms and data structures",
+  "main": "code-examples/complete-tutorial.ts",
+  "scripts": {
+    "test": "npx ts-node code-examples/complete-tutorial.ts",
+    "start": "npx ts-node code-examples/complete-tutorial.ts",
+    "build": "tsc code-examples/complete-tutorial.ts",
+    "lint": "npx eslint code-examples/complete-tutorial.ts"
+  },
+  "keywords": [
+    "algorithms",
+    "data-structures",
+    "tutorial",
+    "typescript",
+    "education"
+  ],
+  "author": "GitHub Copilot",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/algorithms-tutorial.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/algorithms-tutorial/issues"
+  },
+  "homepage": "https://github.com/your-username/algorithms-tutorial#readme"
+}

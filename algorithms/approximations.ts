@@ -62,8 +62,8 @@ export function calculateFlipNumber(sequence: number[], epsilon: number): number
     const currentValue = sequence[currentIndex];
 
     if (
-      prevValue < (1 - epsilon) * currentValue ||
-      prevValue > (1 + epsilon) * currentValue
+      currentValue < (1 - epsilon) * prevValue ||
+      currentValue > (1 + epsilon) * prevValue
     ) {
       //Not in range, update flip number and valid index
       flipNumber++;

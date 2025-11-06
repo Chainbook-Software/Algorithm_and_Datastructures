@@ -4,7 +4,7 @@
   "description": "TypeScript library of algorithms and data structures",
   "main": "index.js",
   "scripts": {
-    "test": "jest typescript/algorithms.test.ts",
+    "test": "jest typescript/tests/",
     "test:watch": "jest --watch",
     "build": "tsc"
   },
