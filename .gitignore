@@ -4,3 +4,10 @@ dist/
 build/
 .DS_Store
 *.tmp
+
+# PHP directories
+php/app/
+php/laravel-app/
+
+# Jupyter notebooks
+python/Notebooks/PlantZone Docu - Online Demand and Supply - Graph Based.ipynb
